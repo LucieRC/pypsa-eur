@@ -4,23 +4,19 @@
 
 from os.path import normpath, exists
 from shutil import copyfile, move, rmtree
-
 from snakemake.remote.HTTP import RemoteProvider as HTTPRemoteProvider
-
 HTTP = HTTPRemoteProvider()
-
 from snakemake.utils import min_version
-
 min_version("7.7")
 
 
+# Retrieve the config file
 if not exists("config/config.yaml"):
     copyfile("config/config.default.yaml", "config/config.yaml")
-
-
 configfile: "config/config.yaml"
 
 
+# Retrieve the costs of technologies and more configurations
 COSTS = f"data/costs_{config['costs']['year']}.csv"
 ATLITE_NPROCESSES = config["atlite"].get("nprocesses", 4)
 
@@ -38,6 +34,7 @@ localrules:
     purge,
 
 
+# Wildcards to run multiple scenarios easily
 wildcard_constraints:
     simpl="[a-zA-Z0-9]*",
     clusters="[0-9]+m?|all",
@@ -53,15 +50,10 @@ include: "rules/build_electricity.smk"
 include: "rules/build_sector.smk"
 include: "rules/solve_electricity.smk"
 include: "rules/postprocess.smk"
-
-
+# And according to the foresight option:
 if config["foresight"] == "overnight":
-
     include: "rules/solve_overnight.smk"
-
-
 if config["foresight"] == "myopic":
-
     include: "rules/solve_myopic.smk"
 
 
@@ -90,7 +82,7 @@ rule dag:
         dot -Tpng -o {output.png} {output.dot}
         """
 
-
+# To have a documentation of the logs?
 rule doc:
     message:
         "Build documentation."
