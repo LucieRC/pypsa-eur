@@ -5,7 +5,7 @@
 tutorial: true
 
 run:
-  name: "test-sector-myopic"
+  name: "test-sc"
   disable_progressbar: true
   shared_resources: true
   shared_cutouts: true
@@ -20,11 +20,11 @@ scenario:
   sector_opts:
   - 24H-T-H-B-I-A-solar+p3-dist1
   planning_horizons:
-  - 2030
-  - 2040
+  # - 2030
+  # - 2040
   - 2050
 
-countries: ['BE']
+countries: ['FR']
 
 snapshots:
   start: "2013-03-01"

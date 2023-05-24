@@ -16,6 +16,9 @@ scenario:
   - 5
   opts:
   - Co2L-24H
+  # Added by myself (Lucie)
+  planning_horizons: # investment years for myopic and perfect; for overnight, year of cost assumptions can be different and is defined under 'costs'
+  - 2050
 
 countries: ['BE']
 
@@ -64,7 +67,7 @@ clustering:
 solving:
   solver:
     name: glpk
-    options: "glpk-default"
+    options: glpk-default
 
 
 plotting:

@@ -58,7 +58,7 @@ def _add_land_use_constraint(n, config):
         ext_i = (n.generators.carrier == carrier) & ~n.generators.p_nom_extendable
         existing = (
             n.generators.loc[ext_i, "p_nom"]
-            .groupby(n.generators.bus.map(n.buses.location))
+            .groupby(n.generators.bus) #.map(n.buses.location)
             .sum()
         )
         existing.index += " " + carrier + "-" + snakemake.wildcards.planning_horizons
