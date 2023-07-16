@@ -193,3 +193,27 @@ HVDC submarine,2030,FOM,2,%/year,Hagspiel
 HVDC inverter pair,2030,investment,150000,EUR/MW,Hagspiel
 HVDC inverter pair,2030,lifetime,40,years,Hagspiel
 HVDC inverter pair,2030,FOM,2,%/year,Hagspiel
+BEV,2020,investment,660000,EUR/kWel,Lucie
+BEV,2030,investment,367000,EUR/kWel,Lucie
+BEV,2040,investment,367000,EUR/kWel,Lucie
+BEV,2050,investment,367000,EUR/kWel,Lucie
+FCEV,2020,investment,1100000,EUR/kWel,Lucie
+FCEV,2030,investment,660000,EUR/kWel,Lucie
+FCEV,2040,investment,600000,EUR/kWel,Lucie
+FCEV,2050,investment,540000,EUR/kWel,Lucie
+ICEV,2020,investment,470000,EUR/kWel,Lucie
+ICEV,2030,investment,500000,EUR/kWel,Lucie
+ICEV,2040,investment,520000,EUR/kWel,Lucie
+ICEV,2050,investment,540000,EUR/kWel,Lucie
+BEV,2020,vOM,660000,EUR/MWhel,Lucie
+BEV,2030,vOM,367000,EUR/MWhel,Lucie
+BEV,2040,vOM,367000,EUR/MWhel,Lucie
+BEV,2050,vOM,367000,EUR/MWhel,Lucie
+FCEV,2020,vOM,1100000,EUR/MWhel,Lucie
+FCEV,2030,vOM,660000,EUR/MWhel,Lucie
+FCEV,2040,vOM,600000,EUR/MWhel,Lucie
+FCEV,2050,vOM,540000,EUR/MWhel,Lucie
+ICEV,2020,vOM,470000,EUR/MWhel,Lucie
+ICEV,2030,vOM,500000,EUR/MWhel,Lucie
+ICEV,2040,vOM,520000,EUR/MWhel,Lucie
+ICEV,2050,vOM,540000,EUR/MWhel,Lucie
