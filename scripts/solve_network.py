@@ -624,6 +624,7 @@ def solve_network(n, config, solving, opts="", **kwargs):
             **kwargs,
         )
     else:
+        # MILP counterpart?
         status, condition = n.optimize.optimize_transmission_expansion_iteratively(
             solver_name=solver_name,
             track_iterations=track_iterations,
