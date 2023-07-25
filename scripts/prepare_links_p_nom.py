@@ -4,6 +4,7 @@
 # SPDX-FileCopyrightText: : 2017-2023 The PyPSA-Eur Authors
 #
 # SPDX-License-Identifier: MIT
+
 """
 Extracts capacities of HVDC links from `Wikipedia.
 
@@ -18,7 +19,7 @@ Relevant Settings
         prepare_links_p_nom:
 
 .. seealso::
-    Documentation of the configuration file ``config/config.yaml`` at
+    Documentation of the configuration file ``config.yaml`` at
     :ref:`toplevel_cf`
 
 Inputs

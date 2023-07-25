@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: : 2020-2023 The PyPSA-Eur Authors
 #
 # SPDX-License-Identifier: MIT
+
 """
 Build land transport demand per clustered model region including efficiency
 improvements due to drivetrain changes, time series for electric vehicle
@@ -123,6 +124,7 @@ def bev_availability_profile(fn, snapshots, nodes, options):
     """
     Derive plugged-in availability for passenger electric vehicles.
     """
+
     traffic = pd.read_csv(fn, skiprows=2, usecols=["count"]).squeeze("columns")
 
     avail_max = options["bev_avail_max"]
@@ -175,9 +177,9 @@ if __name__ == "__main__":
         snakemake.input.pop_weighted_energy_totals, index_col=0
     )
 
-    options = snakemake.params.sector
+    options = snakemake.config["sector"]
 
-    snapshots = pd.date_range(freq="h", **snakemake.params.snapshots, tz="UTC")
+    snapshots = pd.date_range(freq="h", **snakemake.config["snapshots"], tz="UTC")
 
     nyears = len(snapshots) / 8760
 

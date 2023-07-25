@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: : 2020-2023 The PyPSA-Eur Authors
 #
 # SPDX-License-Identifier: MIT
+
 """
 Build industrial production per country.
 """
@@ -246,6 +247,7 @@ def separate_basic_chemicals(demand, year):
     """
     Separate basic chemicals into ammonia, chlorine, methanol and HVC.
     """
+
     ammonia = pd.read_csv(snakemake.input.ammonia_production, index_col=0)
 
     there = ammonia.index.intersection(demand.index)
@@ -264,9 +266,9 @@ def separate_basic_chemicals(demand, year):
 
     # assume HVC, methanol, chlorine production proportional to non-ammonia basic chemicals
     distribution_key = demand["Basic chemicals"] / demand["Basic chemicals"].sum()
-    demand["HVC"] = params["HVC_production_today"] * 1e3 * distribution_key
-    demand["Chlorine"] = params["chlorine_production_today"] * 1e3 * distribution_key
-    demand["Methanol"] = params["methanol_production_today"] * 1e3 * distribution_key
+    demand["HVC"] = config["HVC_production_today"] * 1e3 * distribution_key
+    demand["Chlorine"] = config["chlorine_production_today"] * 1e3 * distribution_key
+    demand["Methanol"] = config["methanol_production_today"] * 1e3 * distribution_key
 
     demand.drop(columns=["Basic chemicals"], inplace=True)
 
@@ -279,11 +281,11 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=snakemake.config["logging"]["level"])
 
-    countries = snakemake.params.countries
+    countries = snakemake.config["countries"]
 
-    year = snakemake.params.industry["reference_year"]
+    year = snakemake.config["industry"]["reference_year"]
 
-    params = snakemake.params.industry
+    config = snakemake.config["industry"]
 
     jrc_dir = snakemake.input.jrc
     eurostat_dir = snakemake.input.eurostat

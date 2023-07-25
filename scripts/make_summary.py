@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: : 2020-2023 The PyPSA-Eur Authors
 #
 # SPDX-License-Identifier: MIT
+
 """
 Create summary CSV files for all scenario runs including costs, capacities,
 capacity factors, curtailment, energy balances, prices and other metrics.
@@ -198,7 +199,7 @@ def calculate_costs(n, label, costs):
 
 
 def calculate_cumulative_cost():
-    planning_horizons = snakemake.params.scenario["planning_horizons"]
+    planning_horizons = snakemake.config["scenario"]["planning_horizons"]
 
     cumulative_cost = pd.DataFrame(
         index=df["costs"].sum().index,
@@ -319,6 +320,7 @@ def calculate_supply(n, label, supply):
     Calculate the max dispatch of each component at the buses aggregated by
     carrier.
     """
+
     bus_carriers = n.buses.carrier.unique()
 
     for i in bus_carriers:
@@ -370,6 +372,7 @@ def calculate_supply_energy(n, label, supply_energy):
     Calculate the total energy supply/consuption of each component at the buses
     aggregated by carrier.
     """
+
     bus_carriers = n.buses.carrier.unique()
 
     for i in bus_carriers:
@@ -688,19 +691,19 @@ if __name__ == "__main__":
         (cluster, ll, opt + sector_opt, planning_horizon): "results/"
         + snakemake.params.RDIR
         + f"/postnetworks/elec_s{simpl}_{cluster}_l{ll}_{opt}_{sector_opt}_{planning_horizon}.nc"
-        for simpl in snakemake.params.scenario["simpl"]
-        for cluster in snakemake.params.scenario["clusters"]
-        for opt in snakemake.params.scenario["opts"]
-        for sector_opt in snakemake.params.scenario["sector_opts"]
-        for ll in snakemake.params.scenario["ll"]
-        for planning_horizon in snakemake.params.scenario["planning_horizons"]
+        for simpl in snakemake.config["scenario"]["simpl"]
+        for cluster in snakemake.config["scenario"]["clusters"]
+        for opt in snakemake.config["scenario"]["opts"]
+        for sector_opt in snakemake.config["scenario"]["sector_opts"]
+        for ll in snakemake.config["scenario"]["ll"]
+        for planning_horizon in snakemake.config["scenario"]["planning_horizons"]
     }
 
-    Nyears = len(pd.date_range(freq="h", **snakemake.params.snapshots)) / 8760
+    Nyears = len(pd.date_range(freq="h", **snakemake.config["snapshots"])) / 8760
 
     costs_db = prepare_costs(
         snakemake.input.costs,
-        snakemake.params.costs,
+        snakemake.config["costs"],
         Nyears,
     )
 
@@ -710,7 +713,7 @@ if __name__ == "__main__":
 
     to_csv(df)
 
-    if snakemake.params.foresight == "myopic":
+    if snakemake.config["foresight"] == "myopic":
         cumulative_cost = calculate_cumulative_cost()
         cumulative_cost.to_csv(
             "results/" + snakemake.params.RDIR + "/csvs/cumulative_cost.csv"

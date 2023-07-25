@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: : 2017-2023 The PyPSA-Eur Authors
 #
 # SPDX-License-Identifier: MIT
+
 """
 Creates GIS shape files of the countries, exclusive economic zones and `NUTS3 <
 https://en.wikipedia.org/wiki/Nomenclature_of_Territorial_Units_for_Statistics>
@@ -15,7 +16,7 @@ Relevant Settings
     countries:
 
 .. seealso::
-    Documentation of the configuration file ``config/config.yaml`` at
+    Documentation of the configuration file ``config.yaml`` at
     :ref:`toplevel_cf`
 
 Inputs
@@ -234,7 +235,6 @@ def nuts3(country_shapes, nuts3, nuts3pop, nuts3gdp, ch_cantons, ch_popgdp):
     manual = gpd.GeoDataFrame(
         [["BA1", "BA", 3871.0], ["RS1", "RS", 7210.0], ["AL1", "AL", 2893.0]],
         columns=["NUTS_ID", "country", "pop"],
-        geometry=gpd.GeoSeries(),
     )
     manual["geometry"] = manual["country"].map(country_shapes)
     manual = manual.dropna()
@@ -255,11 +255,13 @@ if __name__ == "__main__":
         snakemake = mock_snakemake("build_shapes")
     configure_logging(snakemake)
 
-    country_shapes = countries(snakemake.input.naturalearth, snakemake.params.countries)
+    country_shapes = countries(
+        snakemake.input.naturalearth, snakemake.config["countries"]
+    )
     country_shapes.reset_index().to_file(snakemake.output.country_shapes)
 
     offshore_shapes = eez(
-        country_shapes, snakemake.input.eez, snakemake.params.countries
+        country_shapes, snakemake.input.eez, snakemake.config["countries"]
     )
     offshore_shapes.reset_index().to_file(snakemake.output.offshore_shapes)
 

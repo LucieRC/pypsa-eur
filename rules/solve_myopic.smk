@@ -4,11 +4,6 @@
 
 
 rule add_existing_baseyear:
-    params:
-        baseyear=config["scenario"]["planning_horizons"][0],
-        sector=config["sector"],
-        existing_capacities=config["existing_capacities"],
-        costs=config["costs"],
     input:
         overrides="data/override_component_attrs",
         network=RESULTS
@@ -47,10 +42,6 @@ rule add_existing_baseyear:
 
 
 rule add_brownfield:
-    params:
-        H2_retrofit=config["sector"]["H2_retrofit"],
-        H2_retrofit_capacity_per_CH4=config["sector"]["H2_retrofit_capacity_per_CH4"],
-        threshold_capacity=config["existing_capacities"]["threshold_capacity"],
     input:
         overrides="data/override_component_attrs",
         network=RESULTS
@@ -83,19 +74,12 @@ ruleorder: add_existing_baseyear > add_brownfield
 
 
 rule solve_sector_network_myopic:
-    params:
-        solving=config["solving"],
-        foresight=config["foresight"],
-        planning_horizons=config["scenario"]["planning_horizons"],
-        co2_sequestration_potential=config["sector"].get(
-            "co2_sequestration_potential", 200
-        ),
     input:
         overrides="data/override_component_attrs",
         network=RESULTS
         + "prenetworks-brownfield/elec_s{simpl}_{clusters}_l{ll}_{opts}_{sector_opts}_{planning_horizons}.nc",
         costs="data/costs_{planning_horizons}.csv",
-        config=RESULTS + "config/config.yaml",
+        config=RESULTS + "configs/config.yaml",
     output:
         RESULTS
         + "postnetworks/elec_s{simpl}_{clusters}_l{ll}_{opts}_{sector_opts}_{planning_horizons}.nc",
@@ -106,6 +90,8 @@ rule solve_sector_network_myopic:
         + "elec_s{simpl}_{clusters}_l{ll}_{opts}_{sector_opts}_{planning_horizons}_solver.log",
         python=LOGS
         + "elec_s{simpl}_{clusters}_l{ll}_{opts}_{sector_opts}_{planning_horizons}_python.log",
+        memory=LOGS
+        + "elec_s{simpl}_{clusters}_l{ll}_{opts}_{sector_opts}_{planning_horizons}_memory.log",
     threads: 4
     resources:
         mem_mb=config["solving"]["mem"],

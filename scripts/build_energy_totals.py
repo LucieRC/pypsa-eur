@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: : 2020-2023 The PyPSA-Eur Authors
 #
 # SPDX-License-Identifier: MIT
+
 """
 Build total energy demands per country using JRC IDEES, eurostat, and EEA data.
 """
@@ -123,6 +124,7 @@ def build_eurostat(input_eurostat, countries, report_year, year):
     """
     Return multi-index for all countries' energy data in TWh/a.
     """
+
     filenames = {
         2016: f"/{year}-Energy-Balances-June2016edition.xlsx",
         2017: f"/{year}-ENERGY-BALANCES-June2017edition.xlsx",
@@ -161,6 +163,7 @@ def build_swiss(year):
     """
     Return a pd.Series of Swiss energy data in TWh/a.
     """
+
     fn = snakemake.input.swiss
 
     df = pd.read_csv(fn, index_col=[0, 1]).loc["CH", str(year)]
@@ -737,16 +740,16 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=snakemake.config["logging"]["level"])
 
-    params = snakemake.params.energy
+    config = snakemake.config["energy"]
 
     nuts3 = gpd.read_file(snakemake.input.nuts3_shapes).set_index("index")
     population = nuts3["pop"].groupby(nuts3.country).sum()
 
-    countries = snakemake.params.countries
+    countries = snakemake.config["countries"]
     idees_countries = pd.Index(countries).intersection(eu28)
 
-    data_year = params["energy_totals_year"]
-    report_year = snakemake.params.energy["eurostat_report_year"]
+    data_year = config["energy_totals_year"]
+    report_year = snakemake.config["energy"]["eurostat_report_year"]
     input_eurostat = snakemake.input.eurostat
     eurostat = build_eurostat(input_eurostat, countries, report_year, data_year)
     swiss = build_swiss(data_year)
@@ -755,8 +758,8 @@ if __name__ == "__main__":
     energy = build_energy_totals(countries, eurostat, swiss, idees)
     energy.to_csv(snakemake.output.energy_name)
 
-    base_year_emissions = params["base_emissions_year"]
-    emissions_scope = snakemake.params.energy["emissions"]
+    base_year_emissions = config["base_emissions_year"]
+    emissions_scope = snakemake.config["energy"]["emissions"]
     eea_co2 = build_eea_co2(snakemake.input.co2, base_year_emissions, emissions_scope)
     eurostat_co2 = build_eurostat_co2(
         input_eurostat, countries, report_year, base_year_emissions

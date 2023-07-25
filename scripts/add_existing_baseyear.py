@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: : 2020-2023 The PyPSA-Eur Authors
 #
 # SPDX-License-Identifier: MIT
+
 """
 Adds existing power and heat generation capacities for initial planning
 horizon.
@@ -22,7 +23,6 @@ import numpy as np
 import pypsa
 import xarray as xr
 from _helpers import override_component_attrs, update_config_with_sector_opts
-from add_electricity import sanitize_carriers
 from prepare_sector_network import cluster_heat_buses, define_spatial, prepare_costs
 
 cc = coco.CountryConverter()
@@ -38,6 +38,7 @@ def add_build_year_to_new_assets(n, baseyear):
     baseyear : int
         year in which optimized assets are built
     """
+
     # Give assets with lifetimes and no build year the build year baseyear
     for c in n.iterate_components(["Link", "Generator", "Store"]):
         assets = c.df.index[(c.df.lifetime != np.inf) & (c.df.build_year == 0)]
@@ -61,6 +62,7 @@ def add_existing_renewables(df_agg):
     Append existing renewables to the df_agg pd.DataFrame with the conventional
     power plants.
     """
+
     carriers = {"solar": "solar", "onwind": "onwind", "offwind": "offwind-ac"}
 
     for tech in ["solar", "onwind", "offwind"]:
@@ -158,7 +160,7 @@ def add_power_capacities_installed_before_baseyear(n, grouping_years, costs, bas
     # Fill missing DateOut
     dateout = (
         df_agg.loc[biomass_i, "DateIn"]
-        + snakemake.params.costs["fill_values"]["lifetime"]
+        + snakemake.config["costs"]["fill_values"]["lifetime"]
     )
     df_agg.loc[biomass_i, "DateOut"] = df_agg.loc[biomass_i, "DateOut"].fillna(dateout)
 
@@ -219,7 +221,7 @@ def add_power_capacities_installed_before_baseyear(n, grouping_years, costs, bas
         capacity = df.loc[grouping_year, generator]
         capacity = capacity[~capacity.isna()]
         capacity = capacity[
-            capacity > snakemake.params.existing_capacities["threshold_capacity"]
+            capacity > snakemake.config["existing_capacities"]["threshold_capacity"]
         ]
         suffix = "-ac" if generator == "offwind" else ""
         name_suffix = f" {generator}{suffix}-{grouping_year}"
@@ -583,7 +585,7 @@ def add_heating_capacities_installed_before_baseyear(
             )
 
             # delete links with capacities below threshold
-            threshold = snakemake.params.existing_capacities["threshold_capacity"]
+            threshold = snakemake.config["existing_capacities"]["threshold_capacity"]
             n.mremove(
                 "Link",
                 [
@@ -613,10 +615,10 @@ if __name__ == "__main__":
 
     update_config_with_sector_opts(snakemake.config, snakemake.wildcards.sector_opts)
 
-    options = snakemake.params.sector
+    options = snakemake.config["sector"]
     opts = snakemake.wildcards.sector_opts.split("-")
 
-    baseyear = snakemake.params.baseyear
+    baseyear = snakemake.config["scenario"]["planning_horizons"][0]
 
     overrides = override_component_attrs(snakemake.input.overrides)
     n = pypsa.Network(snakemake.input.network, override_component_attrs=overrides)
@@ -627,12 +629,14 @@ if __name__ == "__main__":
     Nyears = n.snapshot_weightings.generators.sum() / 8760.0
     costs = prepare_costs(
         snakemake.input.costs,
-        snakemake.params.costs,
+        snakemake.config["costs"],
         Nyears,
     )
 
-    grouping_years_power = snakemake.params.existing_capacities["grouping_years_power"]
-    grouping_years_heat = snakemake.params.existing_capacities["grouping_years_heat"]
+    grouping_years_power = snakemake.config["existing_capacities"][
+        "grouping_years_power"
+    ]
+    grouping_years_heat = snakemake.config["existing_capacities"]["grouping_years_heat"]
     add_power_capacities_installed_before_baseyear(
         n, grouping_years_power, costs, baseyear
     )
@@ -649,7 +653,7 @@ if __name__ == "__main__":
             .to_pandas()
             .reindex(index=n.snapshots)
         )
-        default_lifetime = snakemake.params.costs["fill_values"]["lifetime"]
+        default_lifetime = snakemake.config["costs"]["fill_values"]["lifetime"]
         add_heating_capacities_installed_before_baseyear(
             n,
             baseyear,
@@ -665,7 +669,5 @@ if __name__ == "__main__":
         cluster_heat_buses(n)
 
     n.meta = dict(snakemake.config, **dict(wildcards=dict(snakemake.wildcards)))
-
-    sanitize_carriers(n, snakemake.config)
 
     n.export_to_netcdf(snakemake.output[0])

@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: : 2020-2023 The PyPSA-Eur Authors
 #
 # SPDX-License-Identifier: MIT
+
 """
 Build population layouts for all clustered model regions as total as well as
 split by urban and rural population.
@@ -24,16 +25,12 @@ if __name__ == "__main__":
 
     cutout = atlite.Cutout(snakemake.input.cutout)
 
-    clustered_regions = gpd.GeoSeries(
+    clustered_regions = (
         gpd.read_file(snakemake.input.regions_onshore)
         .set_index("name")
         .buffer(0)
         .squeeze()
     )
-
-    # if 1 country, 1 node
-    if clustered_regions.size == 1:
-        clustered_regions.index = [snakemake.config["countries"][0] + "0 0"]
 
     I = cutout.indicatormatrix(clustered_regions)
 

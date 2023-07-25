@@ -3,6 +3,7 @@
 # SPDX-FileCopyrightText: : 2017-2023 The PyPSA-Eur Authors
 #
 # SPDX-License-Identifier: MIT
+
 """
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3517935.svg
    :target: https://doi.org/10.5281/zenodo.3517935
@@ -23,7 +24,7 @@ The :ref:`tutorial` uses a smaller `data bundle <https://zenodo.org/record/35179
     tutorial:
 
 .. seealso::
-    Documentation of the configuration file ``config/config.yaml`` at
+    Documentation of the configuration file ``config.yaml`` at
     :ref:`toplevel_cf`
 
 **Outputs**
@@ -58,8 +59,9 @@ if __name__ == "__main__":
     else:
         url = "https://zenodo.org/record/3517935/files/pypsa-eur-data-bundle.tar.xz"
 
+    # Save locations
     tarball_fn = Path(f"{rootpath}/bundle.tar.xz")
-    to_fn = Path(rootpath) / Path(snakemake.output[0]).parent.parent
+    to_fn = Path(f"{rootpath}/data")
 
     logger.info(f"Downloading databundle from '{url}'.")
     disable_progress = snakemake.config["run"].get("disable_progressbar", False)
