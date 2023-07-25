@@ -32,7 +32,7 @@ if config["enable"].get("retrieve_databundle", True):
             "../scripts/retrieve_databundle.py"
 
 
-if config["enable"].get("retrieve_cutout", True):
+if config["enable"].get("retrieve_cutout", False):
 
     rule retrieve_cutout:
         input:
@@ -139,23 +139,23 @@ if config["sector"]["gas_network"] or config["sector"]["H2_retrofit"]:
         script:
             "../scripts/retrieve_gas_infrastructure_data.py"
 
-
-rule retrieve_load_data:
-    input:
-        HTTP.remote(
-            "data.open-power-system-data.org/time_series/2019-06-05/time_series_60min_singleindex.csv",
-            keep_local=True,
-            static=True,
-        ),
-    output:
-        "data/load_raw.csv",
-    log:
-        LOGS + "retrieve_load_data.log",
-    resources:
-        mem_mb=5000,
-    retries: 2
-    run:
-        move(input[0], output[0])
+if config["enable"].get("retrieve_load_data",True):
+    rule retrieve_load_data:
+        input:
+            HTTP.remote(
+                "data.open-power-system-data.org/time_series/2019-06-05/time_series_60min_singleindex.csv",
+                keep_local=True,
+                static=True,
+            ),
+        output:
+            "data/load_raw.csv",
+        log:
+            LOGS + "retrieve_load_data.log",
+        resources:
+            mem_mb=5000,
+        retries: 2
+        run:
+            move(input[0], output[0])
 
 
 rule retrieve_ship_raster:
