@@ -92,7 +92,7 @@ import numpy as np
 import pandas as pd
 import pypsa
 import scipy as sp
-from _helpers import configure_logging, update_p_nom_max
+from _helpers import configure_logging, get_aggregation_strategies, update_p_nom_max
 from add_electricity import load_costs
 from cluster_network import cluster_regions, clustering_for_n_clusters
 from pypsa.clustering.spatial import (
@@ -148,17 +148,23 @@ def simplify_network_to_380(n):
     return n, trafo_map
 
 
-def _prepare_connection_costs_per_link(n, costs, renewable_carriers, length_factor):
+def _prepare_connection_costs_per_link(
+        n, 
+        costs, 
+        # renewable_carriers, 
+        # length_factor
+        config
+        ):
     if n.links.empty:
         return {}
 
     connection_costs_per_link = {}
 
-    for tech in renewable_carriers:
+    for tech in config["renewable"]:
         if tech.startswith("offwind"):
             connection_costs_per_link[tech] = (
                 n.links.length
-                * length_factor
+                * config["lines"]["length_factor"]
                 * (
                     n.links.underwater_fraction
                     * costs.at[tech + "-connection-submarine", "capital_cost"]
@@ -174,15 +180,18 @@ def _compute_connection_costs_to_bus(
     n,
     busmap,
     costs,
-    renewable_carriers,
-    length_factor,
+    config,
+    # renewable_carriers,
+    # length_factor,
     connection_costs_per_link=None,
     buses=None,
 ):
     if connection_costs_per_link is None:
         connection_costs_per_link = _prepare_connection_costs_per_link(
-            n, costs, renewable_carriers, length_factor
-        )
+            n, 
+            costs, 
+            config
+            )
 
     if buses is None:
         buses = busmap.index[busmap.index != busmap.values]
@@ -240,7 +249,7 @@ def _aggregate_and_move_components(
     output,
     aggregate_one_ports={"Load", "StorageUnit"},
     aggregation_strategies=dict(),
-    exclude_carriers=None,
+    # exclude_carriers=None,
 ):
     def replace_components(n, c, df, pnl):
         n.mremove(c, n.df(c).index)
@@ -252,14 +261,14 @@ def _aggregate_and_move_components(
 
     _adjust_capital_costs_using_connection_costs(n, connection_costs_to_bus, output)
 
-    generator_strategies = aggregation_strategies["generators"]
+    _, generator_strategies = get_aggregation_strategies(aggregation_strategies)
 
-    carriers = set(n.generators.carrier) - set(exclude_carriers)
+    # carriers = set(n.generators.carrier) - set(exclude_carriers)
     generators, generators_pnl = aggregateoneport(
         n,
         busmap,
         "Generator",
-        carriers=carriers,
+        # carriers=carriers,
         custom_strategies=generator_strategies,
     )
 
@@ -336,7 +345,8 @@ def simplify_links(
     busmap = n.buses.index.to_series()
 
     connection_costs_per_link = _prepare_connection_costs_per_link(
-        n, costs, renewables, length_factor
+        n, costs,# renewables, length_factor
+        config
     )
     connection_costs_to_bus = pd.DataFrame(
         0.0, index=n.buses.index, columns=list(connection_costs_per_link)
@@ -354,12 +364,14 @@ def simplify_links(
                 n.buses.loc[b, ["x", "y"]], n.buses.loc[buses[1:-1], ["x", "y"]]
             )
             busmap.loc[buses] = b[np.r_[0, m.argmin(axis=0), 1]]
+            config = snakemake.config
             connection_costs_to_bus.loc[buses] += _compute_connection_costs_to_bus(
                 n,
                 busmap,
                 costs,
-                renewables,
-                length_factor,
+                # renewables,
+                # length_factor,
+                config,
                 connection_costs_per_link,
                 buses,
             )
@@ -410,29 +422,38 @@ def simplify_links(
         connection_costs_to_bus,
         output,
         aggregation_strategies=aggregation_strategies,
-        exclude_carriers=exclude_carriers,
+        # exclude_carriers=exclude_carriers,
     )
     return n, busmap
 
 
 def remove_stubs(
-    n,
-    costs,
-    renewable_carriers,
-    length_factor,
-    simplify_network,
-    output,
-    aggregation_strategies=dict(),
+    # n,
+    # costs,
+    # renewable_carriers,
+    # length_factor,
+    # simplify_network,
+    # output,
+    # aggregation_strategies=dict(),
+    n, 
+    costs, 
+    config, 
+    output, 
+    aggregation_strategies=dict()
 ):
     logger.info("Removing stubs")
 
-    across_borders = simplify_network["remove_stubs_across_borders"]
+    # across_borders = simplify_network["remove_stubs_across_borders"]
+    across_borders = config["clustering"]["simplify_network"].get("remove_stubs_across_borders", True)
     matching_attrs = [] if across_borders else ["country"]
     busmap = busmap_by_stubs(n, matching_attrs)
 
-    connection_costs_to_bus = _compute_connection_costs_to_bus(
-        n, busmap, costs, renewable_carriers, length_factor
-    )
+    # connection_costs_to_bus = _compute_connection_costs_to_bus(
+        # n, busmap, costs, renewable_carriers, length_factor
+    # )
+    connection_costs_to_bus = _compute_connection_costs_to_bus(n, busmap, costs, config)
+
+    exclude_carriers = config["clustering"]["simplify_network"].get("exclude_carriers", [])
 
     _aggregate_and_move_components(
         n,
@@ -440,7 +461,7 @@ def remove_stubs(
         connection_costs_to_bus,
         output,
         aggregation_strategies=aggregation_strategies,
-        exclude_carriers=simplify_network["exclude_carriers"],
+        # exclude_carriers=exclude_carriers,
     )
 
     return n, busmap
@@ -564,9 +585,10 @@ if __name__ == "__main__":
         n, stub_map = remove_stubs(
             n,
             technology_costs,
-            params.renewable_carriers,
-            params.length_factor,
-            params.simplify_network,
+            snakemake.config,
+            # params.renewable_carriers,
+            # params.length_factor,
+            # params.simplify_network,
             snakemake.output,
             aggregation_strategies=params.aggregation_strategies,
         )
