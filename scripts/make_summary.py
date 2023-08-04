@@ -298,11 +298,17 @@ def calculate_energy(n, label, energy):
                     .sum()
                 )
                 # remove values where bus is missing (bug in nomopyomo)
+                # try:
                 no_bus = c.df.index[c.df["bus" + port] == ""]
+                # print("no_bus: ", no_bus)
+                # print("port: ", port)
+                # print("c.name: ", c.name)
                 totals.loc[no_bus] = float(
                     n.component_attrs[c.name].loc["p" + port, "default"]
                 )
                 c_energies -= totals.groupby(c.df.carrier).sum()
+                # except KeyError:
+                #     pass
 
         c_energies = pd.concat([c_energies], keys=[c.list_name])
 
@@ -329,7 +335,8 @@ def calculate_supply(n, label, supply):
 
             if len(items) == 0:
                 continue
-
+            
+            # try:
             s = (
                 c.pnl.p[items]
                 .max()
@@ -339,9 +346,11 @@ def calculate_supply(n, label, supply):
             )
             s = pd.concat([s], keys=[c.list_name])
             s = pd.concat([s], keys=[i])
-
             supply = supply.reindex(s.index.union(supply.index))
             supply.loc[s.index, label] = s
+            # except KeyError:
+            #     pass
+
 
         for c in n.iterate_components(n.branch_components):
             for end in [col[3:] for col in c.df.columns if col[:3] == "bus"]:
@@ -349,7 +358,8 @@ def calculate_supply(n, label, supply):
 
                 if len(items) == 0:
                     continue
-
+                
+                # try:
                 # lots of sign compensation for direction and to do maximums
                 s = (-1) ** (1 - int(end)) * (
                     (-1) ** int(end) * c.pnl["p" + end][items]
@@ -360,6 +370,8 @@ def calculate_supply(n, label, supply):
 
                 supply = supply.reindex(s.index.union(supply.index))
                 supply.loc[s.index, label] = s
+                # except KeyError:
+                #     pass
 
     return supply
 
@@ -380,7 +392,8 @@ def calculate_supply_energy(n, label, supply_energy):
 
             if len(items) == 0:
                 continue
-
+            
+            # try:
             s = (
                 c.pnl.p[items]
                 .multiply(n.snapshot_weightings.generators, axis=0)
@@ -394,6 +407,8 @@ def calculate_supply_energy(n, label, supply_energy):
 
             supply_energy = supply_energy.reindex(s.index.union(supply_energy.index))
             supply_energy.loc[s.index, label] = s
+            # except KeyError:
+            #     pass
 
         for c in n.iterate_components(n.branch_components):
             for end in [col[3:] for col in c.df.columns if col[:3] == "bus"]:
@@ -402,6 +417,7 @@ def calculate_supply_energy(n, label, supply_energy):
                 if len(items) == 0:
                     continue
 
+                # try:
                 s = (-1) * c.pnl["p" + end][items].multiply(
                     n.snapshot_weightings.generators, axis=0
                 ).sum().groupby(c.df.loc[items, "carrier"]).sum()
@@ -414,6 +430,8 @@ def calculate_supply_energy(n, label, supply_energy):
                 )
 
                 supply_energy.loc[s.index, label] = s
+                # except KeyError:
+                #     pass
 
     return supply_energy
 
@@ -531,13 +549,15 @@ def calculate_weighted_prices(n, label, weighted_prices):
         #    stores[stores > 0.] = 0.
         #    load += -stores
 
+        # try:
         weighted_prices.loc[carrier, label] = (
             load * n.buses_t.marginal_price[buses]
         ).sum().sum() / load.sum().sum()
-
         # still have no idea what this is for, only for debug reasons.
         if carrier[:5] == "space":
             logger.debug(load * n.buses_t.marginal_price[buses])
+        # except KeyError:
+        #     pass
 
     return weighted_prices
 
@@ -693,6 +713,8 @@ if __name__ == "__main__":
         for ll in snakemake.params.scenario["ll"]
         for planning_horizon in snakemake.params.scenario["planning_horizons"]
     }
+
+    # print(networks_dict)
 
     Nyears = len(pd.date_range(freq="h", **snakemake.params.snapshots)) / 8760
 

@@ -513,7 +513,7 @@ def patch_electricity_network(n):
     n.loads_t.p_set.rename(lambda x: x.strip(), axis=1, inplace=True)
 
 
-def add_co2_tracking(n, options):
+def add_co2_tracking(n, costs, options):
     # minus sign because opposite to how fossil fuels used:
     # CH4 burning puts CH4 down, atmosphere up
     n.add("Carrier", "co2", co2_emissions=-1.0)
@@ -526,6 +526,7 @@ def add_co2_tracking(n, options):
         "Store",
         "co2 atmosphere",
         e_nom_extendable=True,
+        capital_cost=costs.at["co2 atmosphere","investment"],
         e_min_pu=-1,
         carrier="co2",
         bus="co2 atmosphere",
@@ -724,6 +725,9 @@ def cycling_shift(df, steps=1):
 
 
 def prepare_costs(cost_file, params, nyears):
+    """
+    Correct the units, fill any empty values, create the "fixed" column.
+    """
     # set all asset costs and other parameters
     costs = pd.read_csv(cost_file, index_col=[0, 1]).sort_index()
 
@@ -3256,10 +3260,10 @@ if __name__ == "__main__":
 
         snakemake = mock_snakemake(
             "prepare_sector_network",
-            configfiles="test/config.overnight.yaml",
+            configfiles="config/test/config.myopic.yaml",
             simpl="",
             opts="",
-            clusters="5",
+            clusters="2",
             ll="v1.5",
             sector_opts="CO2L0-24H-T-H-B-I-A-solar+p3-dist1",
             planning_horizons="2030",
@@ -3302,7 +3306,7 @@ if __name__ == "__main__":
         for carrier in conventional:
             add_carrier_buses(n, carrier)
 
-    add_co2_tracking(n, options)
+    add_co2_tracking(n, costs, options)
 
     add_generation(n, costs)
 
@@ -3389,8 +3393,8 @@ if __name__ == "__main__":
         limit = o[o.find("Co2L") + 4 :]
         limit = float(limit.replace("p", ".").replace("m", "-"))
         break
-    logger.info(f"Add CO2 limit from {limit_type}")
-    add_co2limit(n, nyears, limit)
+    # logger.info(f"Add CO2 limit from {limit_type}")
+    # add_co2limit(n, nyears, limit)
 
     for o in opts:
         if not o[:10] == "linemaxext":

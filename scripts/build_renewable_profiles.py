@@ -19,7 +19,12 @@ Relevant settings
 
 .. code:: yaml
 
+    {countries}:
+
     snapshots:
+        {snapshot_start}:
+        {snapshot_end}:
+
 
     atlite:
         nprocesses:

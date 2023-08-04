@@ -59,9 +59,9 @@ rule build_powerplants:
 
 
 rule base_network:
-    params:
-        countries=config["countries"],
-        snapshots=config["snapshots"],
+    # params:
+    #     countries=config["countries"],
+    #     snapshots=config["snapshots"],
     input:
         eg_buses="data/entsoegridkit/buses.csv",
         eg_lines="data/entsoegridkit/lines.csv",
@@ -206,6 +206,7 @@ rule build_ship_raster:
 rule build_renewable_profiles:
     params:
         renewable=config["renewable"],
+        # snapshots=config["snapshots"]
     input:
         base_network=RESOURCES + "networks/base.nc",
         corine=ancient("data/bundle/corine/g250_clc06_V18_5.tif"),

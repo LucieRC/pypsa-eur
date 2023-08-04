@@ -764,8 +764,11 @@ if __name__ == "__main__":
     n = pypsa.Network(snakemake.input.base_network)
     Nyears = n.snapshot_weightings.objective.sum() / 8760.0
 
+    # for the electricity sector, all the tech costs are for a given year (usually 2030)
+    # and even for a myopic run I think...
+    # might actually have to take a look at that
     costs = load_costs(
-        snakemake.input.tech_costs,
+        snakemake.input.tech_costs,         # the cost for a specific year
         params.costs,
         params.electricity["max_hours"],
         Nyears,
