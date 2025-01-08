@@ -1,0 +1,175 @@
+digraph snakemake_dag {
+    graph[bgcolor=white, margin=0];
+    node[shape=box, style=rounded, fontname=sans,                 fontsize=10, penwidth=2];
+    edge[penwidth=2, color=grey];
+	0[label = "all", color = "0.33 0.6 0.85", style="rounded"];
+	1[label = "plot_summary", color = "0.17 0.6 0.85", style="rounded"];
+	2[label = "make_summary", color = "0.19 0.6 0.85", style="rounded"];
+	3[label = "solve_sector_network", color = "0.40 0.6 0.85", style="rounded"];
+	4[label = "prepare_sector_network", color = "0.36 0.6 0.85", style="rounded"];
+	5[label = "build_renewable_profiles", color = "0.04 0.6 0.85", style="rounded"];
+	6[label = "determine_availability_matrix", color = "0.19 0.6 0.85", style="rounded"];
+	7[label = "build_ship_raster", color = "0.20 0.6 0.85", style="rounded"];
+	8[label = "build_shapes", color = "0.43 0.6 0.85", style="rounded"];
+	9[label = "cluster_network", color = "0.45 0.6 0.85", style="rounded"];
+	10[label = "simplify_network", color = "0.23 0.6 0.85", style="rounded"];
+	11[label = "add_transmission_projects_and_dlr", color = "0.21 0.6 0.85", style="rounded"];
+	12[label = "base_network", color = "0.28 0.6 0.85", style="rounded"];
+	13[label = "build_transmission_projects", color = "0.41 0.6 0.85", style="rounded"];
+	14[label = "build_electricity_demand_base", color = "0.25 0.6 0.85", style="rounded"];
+	15[label = "build_electricity_demand", color = "0.44 0.6 0.85", style="rounded"];
+	16[label = "cluster_gas_network", color = "0.04 0.6 0.85", style="rounded"];
+	17[label = "build_gas_network", color = "0.43 0.6 0.85", style="rounded"];
+	18[label = "build_gas_input_locations", color = "0.63 0.6 0.85", style="rounded"];
+	19[label = "time_aggregation", color = "0.40 0.6 0.85", style="rounded"];
+	20[label = "prepare_network", color = "0.08 0.6 0.85", style="rounded"];
+	21[label = "add_electricity", color = "0.31 0.6 0.85", style="rounded"];
+	22[label = "build_hydro_profile", color = "0.22 0.6 0.85", style="rounded"];
+	23[label = "build_powerplants", color = "0.32 0.6 0.85", style="rounded"];
+	24[label = "build_hourly_heat_demand", color = "0.52 0.6 0.85", style="rounded"];
+	25[label = "build_daily_heat_demand", color = "0.27 0.6 0.85", style="rounded"];
+	26[label = "build_population_layouts", color = "0.49 0.6 0.85", style="rounded"];
+	27[label = "build_solar_thermal_profiles", color = "0.31 0.6 0.85", style="rounded"];
+	28[label = "build_population_weighted_energy_totals", color = "0.29 0.6 0.85", style="rounded"];
+	29[label = "build_energy_totals", color = "0.64 0.6 0.85", style="rounded"];
+	30[label = "build_clustered_population_layouts", color = "0.05 0.6 0.85", style="rounded"];
+	31[label = "build_heat_totals", color = "0.54 0.6 0.85", style="rounded"];
+	32[label = "build_shipping_demand", color = "0.26 0.6 0.85", style="rounded"];
+	33[label = "build_transport_demand", color = "0.13 0.6 0.85", style="rounded"];
+	34[label = "build_temperature_profiles", color = "0.15 0.6 0.85", style="rounded"];
+	35[label = "build_biomass_potentials", color = "0.07 0.6 0.85", style="rounded"];
+	36[label = "build_salt_cavern_potentials", color = "0.38 0.6 0.85", style="rounded"];
+	37[label = "build_industrial_energy_demand_per_node", color = "0.37 0.6 0.85", style="rounded"];
+	38[label = "build_industry_sector_ratios_intermediate", color = "0.01 0.6 0.85", style="rounded"];
+	39[label = "build_industry_sector_ratios", color = "0.47 0.6 0.85", style="rounded"];
+	40[label = "build_ammonia_production", color = "0.28 0.6 0.85", style="rounded"];
+	41[label = "build_industrial_energy_demand_per_country_today", color = "0.00 0.6 0.85", style="rounded"];
+	42[label = "build_industrial_production_per_country", color = "0.46 0.6 0.85", style="rounded"];
+	43[label = "build_industrial_production_per_node", color = "0.60 0.6 0.85", style="rounded"];
+	44[label = "build_industrial_distribution_key", color = "0.59 0.6 0.85", style="rounded"];
+	45[label = "build_industrial_production_per_country_tomorrow", color = "0.61 0.6 0.85", style="rounded"];
+	46[label = "build_industrial_energy_demand_per_node_today", color = "0.13 0.6 0.85", style="rounded"];
+	47[label = "build_district_heat_share", color = "0.16 0.6 0.85", style="rounded"];
+	48[label = "build_cop_profiles", color = "0.55 0.6 0.85", style="rounded"];
+	49[label = "build_central_heating_temperature_profiles", color = "0.46 0.6 0.85", style="rounded"];
+	50[label = "build_direct_heat_source_utilisation_profiles", color = "0.61 0.6 0.85", style="rounded"];
+	51[label = "plot_power_network_clustered", color = "0.55 0.6 0.85", style="rounded"];
+	52[label = "plot_power_network", color = "0.11 0.6 0.85", style="rounded"];
+	53[label = "plot_hydrogen_network", color = "0.09 0.6 0.85", style="rounded"];
+	1 -> 0
+	2 -> 1
+	52 -> 2
+	51 -> 2
+	53 -> 2
+	3 -> 2
+	4 -> 3
+	32 -> 4
+	33 -> 4
+	28 -> 4
+	34 -> 4
+	27 -> 4
+	16 -> 4
+	24 -> 4
+	47 -> 4
+	5 -> 4
+	30 -> 4
+	48 -> 4
+	37 -> 4
+	36 -> 4
+	43 -> 4
+	35 -> 4
+	19 -> 4
+	10 -> 4
+	50 -> 4
+	18 -> 4
+	20 -> 4
+	29 -> 4
+	9 -> 4
+	9 -> 5
+	8 -> 5
+	6 -> 5
+	7 -> 6
+	8 -> 6
+	9 -> 6
+	10 -> 9
+	14 -> 9
+	12 -> 10
+	11 -> 10
+	13 -> 11
+	12 -> 11
+	8 -> 12
+	8 -> 13
+	12 -> 13
+	8 -> 14
+	10 -> 14
+	15 -> 14
+	17 -> 16
+	9 -> 16
+	9 -> 18
+	24 -> 19
+	27 -> 19
+	20 -> 19
+	21 -> 20
+	22 -> 21
+	9 -> 21
+	23 -> 21
+	14 -> 21
+	5 -> 21
+	8 -> 22
+	9 -> 23
+	25 -> 24
+	9 -> 25
+	26 -> 25
+	8 -> 26
+	9 -> 27
+	26 -> 27
+	29 -> 28
+	31 -> 28
+	30 -> 28
+	8 -> 29
+	9 -> 30
+	26 -> 30
+	29 -> 31
+	8 -> 32
+	29 -> 32
+	9 -> 32
+	29 -> 33
+	34 -> 33
+	28 -> 33
+	30 -> 33
+	9 -> 34
+	26 -> 34
+	8 -> 35
+	9 -> 35
+	9 -> 36
+	46 -> 37
+	38 -> 37
+	43 -> 37
+	42 -> 38
+	41 -> 38
+	39 -> 38
+	40 -> 39
+	42 -> 41
+	29 -> 41
+	40 -> 42
+	44 -> 43
+	45 -> 43
+	30 -> 44
+	9 -> 44
+	42 -> 45
+	41 -> 46
+	44 -> 46
+	29 -> 47
+	30 -> 47
+	49 -> 48
+	34 -> 48
+	9 -> 48
+	34 -> 49
+	9 -> 49
+	49 -> 50
+	9 -> 51
+	3 -> 52
+	9 -> 52
+	3 -> 53
+	9 -> 53
+}            

@@ -47,6 +47,12 @@ def upsample_load(
     gdp_pop_non_nuts3_fn: str,
     distribution_key: dict[str, float],
 ) -> pd.DataFrame:
+    """
+    Distributes load based on:
+    - GDP weight
+    - Population weight
+    - NUTS3 regional data
+    """
     substation_lv_i = n.buses.index[n.buses["substation_lv"]]
     gdf_regions = gpd.read_file(regions_fn).set_index("name").reindex(substation_lv_i)
     load = pd.read_csv(load_fn, index_col=0, parse_dates=True)

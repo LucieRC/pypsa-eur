@@ -135,6 +135,13 @@ def _find_closest_links(links, new_links, distance_upper_bound=1.5):
 
 
 def _load_buses(buses, europe_shape, countries, config):
+    """
+    Loads and processes bus (node) data:
+    1. Read CSV file with bus data
+    2. Filter buses for selected countries
+    3. Set voltage levels and carrier types
+    4. Map geographical coordinates
+    """
     buses = (
         pd.read_csv(
             buses,
@@ -718,8 +725,8 @@ def base_network(
     parameter_corrections,
     config,
 ):
-    base_network = config["electricity"].get("base_network")
-    osm_prebuilt_version = config["electricity"].get("osm-prebuilt-version")
+    base_network = config["electricity"].get("base_network") # returns osm-prebuilt when I checked (from config file)
+    osm_prebuilt_version = config["electricity"].get("osm-prebuilt-version") # 0.6 -> that's then the folder name used in the data osm-prebuilt
     assert (
         base_network
         in {

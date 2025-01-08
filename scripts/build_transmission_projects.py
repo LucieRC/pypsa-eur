@@ -471,6 +471,7 @@ def add_projects(
 
 
 def fill_length_from_geometry(line, line_factor=1.2):
+    """Calculate line lengths from geographical data"""
     if not pd.isna(line.length):
         return line.length
     length = gpd.GeoSeries(line["geometry"], crs=4326).to_crs(3035).length.values[0]
