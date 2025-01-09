@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 def attach_transmission_projects(
     n: pypsa.Network, transmission_projects: list[str]
 ) -> None:
+    # Lucie: I'm not gonna add other transmisison projects anyway
     logger.info("Adding transmission projects to network.")
     for path in transmission_projects:
         path = Path(path)

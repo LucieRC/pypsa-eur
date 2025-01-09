@@ -507,9 +507,37 @@ def attach_wind_and_solar(
 
             n.add(
                 "Generator",
-                ds.indexes["bus"],
+                ds.indexes["bus"] + " fHIGH",
                 " " + car,
-                bus=ds.indexes["bus"],
+                bus=ds.indexes["bus"] + " fHIGH",
+                carrier=car,
+                p_nom_extendable=car in extendable_carriers["Generator"],
+                p_nom_max=ds["p_nom_max"].to_pandas(),
+                marginal_cost=costs.at[supcar, "marginal_cost"],
+                capital_cost=capital_cost,
+                efficiency=costs.at[supcar, "efficiency"],
+                p_max_pu=ds["profile"].transpose("time", "bus").to_pandas(),
+                lifetime=costs.at[supcar, "lifetime"],
+            )
+            n.add(
+                "Generator",
+                ds.indexes["bus"] + " fAVG",
+                " " + car,
+                bus=ds.indexes["bus"] + " fAVG",
+                carrier=car,
+                p_nom_extendable=car in extendable_carriers["Generator"],
+                p_nom_max=ds["p_nom_max"].to_pandas(),
+                marginal_cost=costs.at[supcar, "marginal_cost"],
+                capital_cost=capital_cost,
+                efficiency=costs.at[supcar, "efficiency"],
+                p_max_pu=ds["profile"].transpose("time", "bus").to_pandas(),
+                lifetime=costs.at[supcar, "lifetime"],
+            )
+            n.add(
+                "Generator",
+                ds.indexes["bus"] + " fLOW",
+                " " + car,
+                bus=ds.indexes["bus"] + " fLOW",
                 carrier=car,
                 p_nom_extendable=car in extendable_carriers["Generator"],
                 p_nom_max=ds["p_nom_max"].to_pandas(),
@@ -561,7 +589,10 @@ def attach_conventional_generators(
         fuel_price.columns = ppl.index
         marginal_cost = fuel_price.div(ppl.efficiency).add(ppl.carrier.map(costs.VOM))
     else:
-        marginal_cost = ppl.marginal_cost
+        # Lucie: the fuel price is fixed for all hours
+        marginal_cost_fHIGH = ppl.marginal_cost * 1.1
+        marginal_cost_fAVG = ppl.marginal_cost
+        marginal_cost_fLOW = ppl.marginal_cost * 0.9
 
     # Define generators using modified ppl DataFrame
     caps = ppl.groupby("carrier").p_nom.sum().div(1e3).round(2)
@@ -879,12 +910,33 @@ def attach_stores(n, costs, extendable_carriers):
     buses_i = n.buses.index
 
     if "H2" in carriers:
-        h2_buses_i = n.add("Bus", buses_i + " H2", carrier="H2", location=buses_i)
+        h2_buses_i_fHIGH = n.add("Bus", buses_i + " H2" + " fHIGH", carrier="H2", location=buses_i)
+        h2_buses_i_fAVG = n.add("Bus", buses_i + " H2" + " fAVG", carrier="H2", location=buses_i)
+        h2_buses_i_fLOW = n.add("Bus", buses_i + " H2" + " fLOW", carrier="H2", location=buses_i)
 
+        # Lucie: I think it's enough that it calls the right bus for the naxming
         n.add(
             "Store",
-            h2_buses_i,
-            bus=h2_buses_i,
+            h2_buses_i_fHIGH,
+            bus=h2_buses_i_fHIGH,
+            carrier="H2",
+            e_nom_extendable=True,
+            e_cyclic=True,
+            capital_cost=costs.at["hydrogen storage underground", "capital_cost"],
+        )
+        n.add(
+            "Store",
+            h2_buses_i_fAVG,
+            bus=h2_buses_i_fAVG,
+            carrier="H2",
+            e_nom_extendable=True,
+            e_cyclic=True,
+            capital_cost=costs.at["hydrogen storage underground", "capital_cost"],
+        )
+        n.add(
+            "Store",
+            h2_buses_i_fLOW,
+            bus=h2_buses_i_fLOW,
             carrier="H2",
             e_nom_extendable=True,
             e_cyclic=True,
@@ -893,9 +945,31 @@ def attach_stores(n, costs, extendable_carriers):
 
         n.add(
             "Link",
-            h2_buses_i + " Electrolysis",
+            h2_buses_i_fHIGH + " Electrolysis",
             bus0=buses_i,
-            bus1=h2_buses_i,
+            bus1=h2_buses_i_fHIGH,
+            carrier="H2 electrolysis",
+            p_nom_extendable=True,
+            efficiency=costs.at["electrolysis", "efficiency"],
+            capital_cost=costs.at["electrolysis", "capital_cost"],
+            marginal_cost=costs.at["electrolysis", "marginal_cost"],
+        )
+        n.add(
+            "Link",
+            h2_buses_i_fAVG + " Electrolysis",
+            bus0=buses_i,
+            bus1=h2_buses_i_fAVG,
+            carrier="H2 electrolysis",
+            p_nom_extendable=True,
+            efficiency=costs.at["electrolysis", "efficiency"],
+            capital_cost=costs.at["electrolysis", "capital_cost"],
+            marginal_cost=costs.at["electrolysis", "marginal_cost"],
+        )
+        n.add(
+            "Link",
+            h2_buses_i_fLOW + " Electrolysis",
+            bus0=buses_i,
+            bus1=h2_buses_i_fLOW,
             carrier="H2 electrolysis",
             p_nom_extendable=True,
             efficiency=costs.at["electrolysis", "efficiency"],
@@ -905,8 +979,34 @@ def attach_stores(n, costs, extendable_carriers):
 
         n.add(
             "Link",
-            h2_buses_i + " Fuel Cell",
-            bus0=h2_buses_i,
+            h2_buses_i_fHIGH + " Fuel Cell",
+            bus0=h2_buses_i_fHIGH,
+            bus1=buses_i,
+            carrier="H2 fuel cell",
+            p_nom_extendable=True,
+            efficiency=costs.at["fuel cell", "efficiency"],
+            # NB: fixed cost is per MWel
+            capital_cost=costs.at["fuel cell", "capital_cost"]
+            * costs.at["fuel cell", "efficiency"],
+            marginal_cost=costs.at["fuel cell", "marginal_cost"],
+        )
+        n.add(
+            "Link",
+            h2_buses_i_fAVG + " Fuel Cell",
+            bus0=h2_buses_i_fAVG,
+            bus1=buses_i,
+            carrier="H2 fuel cell",
+            p_nom_extendable=True,
+            efficiency=costs.at["fuel cell", "efficiency"],
+            # NB: fixed cost is per MWel
+            capital_cost=costs.at["fuel cell", "capital_cost"]
+            * costs.at["fuel cell", "efficiency"],
+            marginal_cost=costs.at["fuel cell", "marginal_cost"],
+        )
+        n.add(
+            "Link",
+            h2_buses_i_fLOW + " Fuel Cell",
+            bus0=h2_buses_i_fLOW,
             bus1=buses_i,
             carrier="H2 fuel cell",
             p_nom_extendable=True,
@@ -918,14 +1018,40 @@ def attach_stores(n, costs, extendable_carriers):
         )
 
     if "battery" in carriers:
-        b_buses_i = n.add(
-            "Bus", buses_i + " battery", carrier="battery", location=buses_i
+        b_buses_i_fHIGH = n.add(
+            "Bus", buses_i + " battery" + " fHIGH", carrier="battery", location=buses_i
+        )
+        b_buses_i_fAVG = n.add(
+            "Bus", buses_i + " battery" + " fAVG", carrier="battery", location=buses_i
+        )
+        b_buses_i_fLOW = n.add(
+            "Bus", buses_i + " battery" + " fLOW", carrier="battery", location=buses_i
         )
 
         n.add(
             "Store",
-            b_buses_i,
-            bus=b_buses_i,
+            b_buses_i_fHIGH,
+            bus=b_buses_i_fHIGH,
+            carrier="battery",
+            e_cyclic=True,
+            e_nom_extendable=True,
+            capital_cost=costs.at["battery storage", "capital_cost"],
+            marginal_cost=costs.at["battery", "marginal_cost"],
+        )
+        n.add(
+            "Store",
+            b_buses_i_fAVG,
+            bus=b_buses_i_fAVG,
+            carrier="battery",
+            e_cyclic=True,
+            e_nom_extendable=True,
+            capital_cost=costs.at["battery storage", "capital_cost"],
+            marginal_cost=costs.at["battery", "marginal_cost"],
+        )
+        n.add(
+            "Store",
+            b_buses_i_fLOW,
+            bus=b_buses_i_fLOW,
             carrier="battery",
             e_cyclic=True,
             e_nom_extendable=True,
@@ -937,9 +1063,33 @@ def attach_stores(n, costs, extendable_carriers):
 
         n.add(
             "Link",
-            b_buses_i + " charger",
+            b_buses_i_fHIGH + " charger",
             bus0=buses_i,
-            bus1=b_buses_i,
+            bus1=b_buses_i_fHIGH,
+            carrier="battery charger",
+            # the efficiencies are "round trip efficiencies"
+            efficiency=costs.at["battery inverter", "efficiency"] ** 0.5,
+            capital_cost=costs.at["battery inverter", "capital_cost"],
+            p_nom_extendable=True,
+            marginal_cost=costs.at["battery inverter", "marginal_cost"],
+        )
+        n.add(
+            "Link",
+            b_buses_i_fAVG + " charger",
+            bus0=buses_i,
+            bus1=b_buses_i_fAVG,
+            carrier="battery charger",
+            # the efficiencies are "round trip efficiencies"
+            efficiency=costs.at["battery inverter", "efficiency"] ** 0.5,
+            capital_cost=costs.at["battery inverter", "capital_cost"],
+            p_nom_extendable=True,
+            marginal_cost=costs.at["battery inverter", "marginal_cost"],
+        )
+        n.add(
+            "Link",
+            b_buses_i_fLOW + " charger",
+            bus0=buses_i,
+            bus1=b_buses_i_fLOW,
             carrier="battery charger",
             # the efficiencies are "round trip efficiencies"
             efficiency=costs.at["battery inverter", "efficiency"] ** 0.5,
@@ -950,8 +1100,28 @@ def attach_stores(n, costs, extendable_carriers):
 
         n.add(
             "Link",
-            b_buses_i + " discharger",
-            bus0=b_buses_i,
+            b_buses_i_fHIGH + " discharger",
+            bus0=b_buses_i_fHIGH,
+            bus1=buses_i,
+            carrier="battery discharger",
+            efficiency=costs.at["battery inverter", "efficiency"] ** 0.5,
+            p_nom_extendable=True,
+            marginal_cost=costs.at["battery inverter", "marginal_cost"],
+        )
+        n.add(
+            "Link",
+            b_buses_i_fAVG + " discharger",
+            bus0=b_buses_i_fAVG,
+            bus1=buses_i,
+            carrier="battery discharger",
+            efficiency=costs.at["battery inverter", "efficiency"] ** 0.5,
+            p_nom_extendable=True,
+            marginal_cost=costs.at["battery inverter", "marginal_cost"],
+        )
+        n.add(
+            "Link",
+            b_buses_i_fLOW + " discharger",
+            bus0=b_buses_i_fLOW,
             bus1=buses_i,
             carrier="battery discharger",
             efficiency=costs.at["battery inverter", "efficiency"] ** 0.5,
@@ -964,7 +1134,7 @@ if __name__ == "__main__":
     if "snakemake" not in globals():
         from _helpers import mock_snakemake
 
-        snakemake = mock_snakemake("add_electricity", clusters=100)
+        snakemake = mock_snakemake("add_electricity", clusters=2)
     configure_logging(snakemake)
     set_scenario_config(snakemake)
 
